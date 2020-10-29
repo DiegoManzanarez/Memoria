@@ -1,10 +1,13 @@
 from random import *
 from turtle import *
 from freegames import path
+import time
 
+
+tapCounter = 0
+counterForTilesThatAreHidden = 0
 car = path('car.gif')
 tiles = list(range(32)) * 2
-writer = Turtle(visible=False)
 state = {'mark': None}
 hide = [True] * 64
 
@@ -28,9 +31,10 @@ def xy(count):
     "Convert tiles count to (x, y) coordinates."
     return (count % 8) * 50 - 200, (count // 8) * 50 - 200
 
+
 def tap(x, y):
-    writer.undo()
-    writer.write(state['mark'])
+    global tapCounter
+    global counterForTilesThatAreHidden
     "Update mark and hidden tiles based on tap."
     spot = index(x, y)
     mark = state['mark']
@@ -42,6 +46,12 @@ def tap(x, y):
         hide[mark] = False
         state['mark'] = None
 
+    # Se agregó el contador que cuenta y desplega el número de taps (en consola)
+    tapCounter += 1
+    print(tapCounter)
+
+
+
 def draw():
     "Draw image and tiles."
     clear()
@@ -49,6 +59,7 @@ def draw():
     shape(car)
     stamp()
 
+ 
     for count in range(64):
         if hide[count]:
             x, y = xy(count)
@@ -56,24 +67,50 @@ def draw():
 
     mark = state['mark']
 
+    counterForTilesThatAreHidden=0
+
+    # Se detecta cuando ya no hay casillas por destapar y se le indica al usuario que ya no hay mas casillas y por ende ganó (en consola)
+
+    for count in range(64):
+        if (hide[count]==0):
+            counterForTilesThatAreHidden+=1
+
+    if (counterForTilesThatAreHidden==64):
+        print("No more Tiles")
+        print("You won!")
+        # Se optimizó el término del programa 
+        done()
+
+
     if mark is not None and hide[mark]:
         x, y = xy(mark)
         up()
-        goto(x + 10, y + 5)
-        color('black')
-        write(tiles[mark], font=('Arial', 30, 'normal'))
 
+        # Se agregó la funcionalidad para centrar los dígitos en cada casilla de acuerda a su numero de cifras (>10 o 10=<)
+        if tiles[mark]<10:
+            goto(x+18, y+8)
+        if tiles[mark]>=10:
+            goto(x+10, y+8)
+        
+        # Como condicionamiento de invoación del juego para auxiliar al usuario se agregó una funcionalidad en donde los numeros pares son de color verde y los numeros impares son rojos
+        if tiles[mark]%2==0:
+            color('green')
+        else:
+            color('red')
+        write(tiles[mark], font=('Arial', 30, 'normal'))
     update()
     ontimer(draw, 100)
+
+    
+
+
+    
 
 shuffle(tiles)
 setup(420, 420, 370, 0)
 addshape(car)
 hideturtle()
 tracer(False)
-writer.goto(230, 180)
-writer.color('black')
-writer.write(state['mark'])
 onscreenclick(tap)
 draw()
 done()
